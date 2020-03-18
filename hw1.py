@@ -2,6 +2,8 @@ from typing import List
 
 import pandas as pd
 
+import datetime
+
 CONFIRMED_CASES_URL = f"https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data" \
                       f"/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv "
 
@@ -29,7 +31,10 @@ def poland_cases_by_date(day: int, month: int, year: int = 2020) -> int:
     """
     
     # Your code goes here (remove pass)
-    pass
+    if month==1 and day<22 or year!=2020 or month<=0 or day<=0:
+        raise ValueError("Date out of range of data")
+    dzien=f"%s/%s/%s" %(month, day, year%100)
+    return confirmed_cases.loc[confirmed_cases["Country/Region"]=="Poland"][dzien].values[0]
 
 
 def top5_countries_by_date(day: int, month: int, year: int = 2020) -> List[str]:
@@ -49,7 +54,12 @@ def top5_countries_by_date(day: int, month: int, year: int = 2020) -> List[str]:
     """
 
     # Your code goes here (remove pass)
-    pass
+    if month==1 and day<22 or year!=2020 or month<=0 or day<=0:
+        raise ValueError("Date out of range of data")
+    dzien=f"%s/%s/%s" %(month, day, year%100)
+    df=confirmed_cases.groupby("Country/Region").sum()
+    df=df.sort_values(by=dzien).tail(5).iloc[::-1]
+    return df.index.tolist()
 
 # Function name is wrong, read the pydoc
 def no_new_cases_count(day: int, month: int, year: int = 2020) -> int:
@@ -70,4 +80,14 @@ def no_new_cases_count(day: int, month: int, year: int = 2020) -> int:
     """
     
     # Your code goes here (remove pass)
-    pass
+    if month==1 and day<23 or year!=2020 or month<=0 or day<=0:
+        raise ValueError("Date out of range of data")
+    dzien=datetime.date(year, month, day)
+    poprzedni=dzien+datetime.timedelta(days=-1)
+    df=confirmed_cases.groupby("Country/Region").sum()
+    i=0
+    for kraj in df.index:
+        if df.loc[kraj][dzien.strftime('%m/%e/%y').lstrip("0").replace(" ","")] == df.loc[kraj][poprzedni.strftime('%m/%e/%y').lstrip("0").replace(" ","")]:
+            if df.loc[kraj][dzien.strftime('%m/%e/%y').lstrip("0").replace(" ","")]!=0:
+                 i=i+1
+    return i
